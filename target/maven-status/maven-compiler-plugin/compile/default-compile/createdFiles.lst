@@ -1,0 +1,15 @@
+com\edictum\web\LessonImageServlet.class
+com\edictum\model\Section.class
+com\edictum\web\UserPreviewBean.class
+com\edictum\model\Lesson.class
+com\edictum\model\LearningMethod.class
+com\edictum\web\LessonImageUploadServlet.class
+com\edictum\service\LessonCatalogService.class
+com\edictum\web\LearningPortalBean.class
+com\edictum\web\AdminLessonBean.class
+com\edictum\model\Assignment.class
+com\edictum\web\LearningPortalBean$LessonSelection.class
+com\edictum\model\LessonImage.class
+com\edictum\service\LessonCatalogService$LessonImageData.class
+com\edictum\model\LessonGroup.class
+com\edictum\web\SecurityBean.class

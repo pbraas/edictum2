@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="jakarta.faces.html"
+      xmlns:f="jakarta.faces.core"
+      xmlns:ui="jakarta.faces.facelets"
+      xmlns:p="primefaces">
+<h:head>
+    <title>Lesbeheer</title>
+    <h:outputStylesheet library="css" name="app.css"/>
+    <script src="#{securityBean.tinyMceScriptUrl}" referrerpolicy="origin"></script>
+    <h:outputScript target="body">
+        window.EdictumAdminTinyMce = window.EdictumAdminTinyMce || {
+            hooksRegistered: false,
+            init: function () {
+                if (!window.tinymce) {
+                    return;
+                }
+                window.tinymce.remove('textarea.lesson-editor');
+                window.tinymce.init({
+                    selector: 'textarea.lesson-editor',
+                    height: 560,
+                    min_height: 420,
+                    menubar: 'file edit view insert format tools table help',
+                    toolbar_mode: 'sliding',
+                    toolbar_sticky: true,
+                    promotion: false,
+                    branding: false,
+                    statusbar: true,
+                    resize: true,
+                    plugins: 'advlist autolink lists link image charmap preview anchor searchreplace visualblocks code fullscreen insertdatetime media table help wordcount autoresize emoticons quickbars codesample directionality nonbreaking pagebreak save visualchars hr',
+                    toolbar: 'undo redo | blocks | fontfamily fontsize | bold italic underline strikethrough forecolor backcolor | removeformat | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | blockquote | ltr rtl | link image media table charmap emoticons hr pagebreak | searchreplace visualblocks visualchars | codesample | preview fullscreen | code',
+                    quickbars_selection_toolbar: 'bold italic underline | blocks | forecolor backcolor | bullist numlist blockquote | quicklink',
+                    quickbars_insert_toolbar: 'image media table codesample hr',
+                    block_formats: 'Paragraph=p; Heading 1=h1; Heading 2=h2; Heading 3=h3; Heading 4=h4; Preformatted=pre',
+                    fontsize_formats: '10px 12px 14px 16px 18px 20px 24px 30px 36px 48px',
+                    contextmenu: 'undo redo | inserttable | cell row column deletetable | link image',
+                    browser_spellcheck: true,
+                    object_resizing: 'img table',
+                    elementpath: true,
+                    image_caption: true,
+                    images_upload_url: '#{request.contextPath}/admin/lesson-images/upload',
+                    images_upload_credentials: true,
+                    automatic_uploads: true,
+                    file_picker_types: 'image',
+                    link_default_target: '_blank',
+                    link_assume_external_targets: 'https',
+                    table_default_attributes: {
+                        border: '1'
+                    },
+                    table_default_styles: {
+                        'border-collapse': 'collapse',
+                        width: '100%'
+                    },
+                    content_style: 'body { font-family: Inter, Arial, sans-serif; font-size: 16px; line-height: 1.6; }'
+                });
+            },
+            sync: function () {
+                if (window.tinymce) {
+                    window.tinymce.triggerSave();
+                }
+            },
+            registerHooks: function () {
+                if (this.hooksRegistered) {
+                    return;
+                }
+                this.hooksRegistered = true;
+
+                var self = this;
+                var facesAjax = (window.faces &amp;&amp; window.faces.ajax) || (window.jsf &amp;&amp; window.jsf.ajax);
+                if (facesAjax) {
+                    facesAjax.addOnEvent(function (data) {
+                        if (data.status === 'begin') {
+                            self.sync();
+                        }
+                        if (data.status === 'success') {
+                            self.init();
+                        }
+                    });
+                }
+
+                if (window.jQuery) {
+                    window.jQuery(document).on('pfAjaxSend.edictumAdminTinyMce', function () {
+                        self.sync();
+                    });
+                    window.jQuery(document).on('pfAjaxComplete.edictumAdminTinyMce', function () {
+                        self.init();
+                    });
+                }
+            }
+        };
+        window.addEventListener('load', function () {
+            window.EdictumAdminTinyMce.init();
+            window.EdictumAdminTinyMce.registerHooks();
+        });
+        window.EdictumAdminTinyMce.registerHooks();
+    </h:outputScript>
+</h:head>
+<h:body styleClass="portal-body">
+    <h:form id="adminForm" onsubmit="window.EdictumAdminTinyMce &amp;&amp; window.EdictumAdminTinyMce.sync();">
+        <div class="topbar">
+            <h1>Lesbeheer</h1>
+            <h:link styleClass="admin-link" outcome="/index">Terug naar home</h:link>
+        </div>
+
+        <p:growl id="messages" showDetail="true"/>
+
+        <div class="admin-layout">
+            <section class="admin-card">
+                <h2>#{adminLessonBean.editingLessonId eq null ? 'Les toevoegen' : 'Les bewerken'}</h2>
+
+                <div class="admin-form-grid">
+                    <p:outputLabel for="section" value="Onderdeel"/>
+                    <p:selectOneMenu id="section" value="#{adminLessonBean.sectionId}" required="true" styleClass="full-width">
+                        <f:selectItem itemLabel="Kies onderdeel" itemValue="#{null}" noSelectionOption="true"/>
+                        <f:selectItems value="#{adminLessonBean.sections}"
+                                       var="section"
+                                       itemValue="#{section.id}"
+                                       itemLabel="#{section.method.group.name} / #{section.method.name} / #{section.name}"/>
+                    </p:selectOneMenu>
+
+                    <p:outputLabel for="title" value="Lestitel"/>
+                    <p:inputText id="title" value="#{adminLessonBean.title}" required="true" maxlength="150" styleClass="full-width"/>
+
+                    <p:outputLabel for="content" value="Lesinhoud"/>
+                    <p:inputTextarea id="content" value="#{adminLessonBean.content}" required="true" rows="6" autoResize="false" styleClass="full-width lesson-editor"/>
+                </div>
+
+                <div class="admin-actions">
+                    <p:commandButton value="#{adminLessonBean.editingLessonId eq null ? 'Les toevoegen' : 'Wijzigingen opslaan'}"
+                                     action="#{adminLessonBean.saveLesson}"
+                                     update="adminForm"
+                                     onstart="window.EdictumAdminTinyMce &amp;&amp; window.EdictumAdminTinyMce.sync();"/>
+                    <p:commandButton value="Annuleren"
+                                     action="#{adminLessonBean.cancelEdit}"
+                                     process="@this"
+                                     update="adminForm"
+                                     styleClass="p-button-secondary"
+                                     rendered="#{adminLessonBean.editingLessonId ne null}"/>
+                </div>
+            </section>
+
+            <section class="admin-card">
+                <h2>Huidige lessen</h2>
+
+                <p:dataTable value="#{adminLessonBean.lessons}" var="lesson" paginator="true" rows="8" reflow="true">
+                    <p:column headerText="Groep">
+                        #{lesson.section.method.group.name}
+                    </p:column>
+                    <p:column headerText="Methode">
+                        #{lesson.section.method.name}
+                    </p:column>
+                    <p:column headerText="Onderdeel">
+                        #{lesson.section.name}
+                    </p:column>
+                    <p:column headerText="Titel">
+                        #{lesson.title}
+                    </p:column>
+                    <p:column headerText="Acties" styleClass="actions-column">
+                        <p:commandButton value="Bewerken"
+                                         action="#{adminLessonBean.editLesson(lesson)}"
+                                         process="@this"
+                                         update="adminForm"
+                                         styleClass="p-button-outlined"/>
+                        <p:commandButton value="Verwijderen"
+                                         action="#{adminLessonBean.deleteLesson(lesson.id)}"
+                                         process="@this"
+                                         update="adminForm"
+                                         styleClass="p-button-danger p-button-outlined"/>
+                    </p:column>
+                </p:dataTable>
+            </section>
+        </div>
+    </h:form>
+</h:body>
+</html>

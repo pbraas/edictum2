@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="jakarta.faces.html"
+      xmlns:f="jakarta.faces.core"
+      xmlns:ui="jakarta.faces.facelets"
+      xmlns:c="jakarta.tags.core"
+      xmlns:p="primefaces">
+    <h:head>
+        <title>Edictum2 Leerportaal</title>
+        <h:outputStylesheet library="css" name="app.css"/>
+        <ui:fragment rendered="#{securityBean.admin}">
+            <script src="#{securityBean.tinyMceScriptUrl}" referrerpolicy="origin"></script>
+            <h:outputScript target="body">
+                window.EdictumTinyMce = window.EdictumTinyMce || {
+                    hooksRegistered: false,
+                    init: function () {
+                        if (!window.tinymce) {
+                            return;
+                        }
+                        window.tinymce.remove('textarea.lesson-editor, textarea.assignment-editor');
+                        window.tinymce.init({
+                            selector: 'textarea.lesson-editor, textarea.assignment-editor',
+                            height: 560,
+                            min_height: 420,
+                            menubar: 'file edit view insert format tools table help',
+                            toolbar_mode: 'sliding',
+                            toolbar_sticky: true,
+                            promotion: false,
+                            branding: false,
+                            statusbar: true,
+                            resize: true,
+                            plugins: 'advlist autolink lists link image charmap preview anchor searchreplace visualblocks code fullscreen insertdatetime media table help wordcount autoresize emoticons quickbars codesample directionality nonbreaking pagebreak save visualchars hr',
+                            toolbar: 'undo redo | blocks | fontfamily fontsize | bold italic underline strikethrough forecolor backcolor | removeformat | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | blockquote | ltr rtl | link image media table charmap emoticons hr pagebreak | searchreplace visualblocks visualchars | codesample | preview fullscreen | code | woordtip',
+                            quickbars_selection_toolbar: 'bold italic underline | blocks | forecolor backcolor | bullist numlist blockquote | quicklink | woordtip',
+                            quickbars_insert_toolbar: 'image media table codesample hr',
+                            block_formats: 'Paragraph=p; Heading 1=h1; Heading 2=h2; Heading 3=h3; Heading 4=h4; Preformatted=pre',
+                            fontsize_formats: '10px 12px 14px 16px 18px 20px 24px 30px 36px 48px',
+                            contextmenu: 'undo redo | inserttable | cell row column deletetable | link image',
+                            browser_spellcheck: true,
+                            object_resizing: 'img table',
+                            elementpath: true,
+                            image_caption: true,
+                            images_upload_url: '#{request.contextPath}/admin/lesson-images/upload',
+                            images_upload_credentials: true,
+                            automatic_uploads: true,
+                            file_picker_types: 'image',
+                            link_default_target: '_blank',
+                            link_assume_external_targets: 'https',
+                            extended_valid_elements: 'span[*]',
+                            table_default_attributes: {
+                                border: '1'
+                            },
+                            table_default_styles: {
+                                'border-collapse': 'collapse',
+                                width: '100%'
+                            },
+                            content_style: [
+                                'body { font-family: Inter, Arial, sans-serif; font-size: 16px; line-height: 1.6; }',
+                                '.woordtip { border-bottom: 2px dotted #bb8c09; cursor: help; position: relative; color: inherit; }',
+                                '.woordtip::after { content: attr(data-tip); position: absolute; left: 50%; bottom: calc(100% + 6px); transform: translateX(-50%); background: #1b2a44; color: #fff; padding: 0.35rem 0.65rem; border-radius: 5px; font-size: 0.82rem; white-space: pre-wrap; max-width: 260px; min-width: 80px; text-align: center; pointer-events: none; opacity: 0; transition: opacity 0.18s; z-index: 9999; }',
+                                '.woordtip:hover::after { opacity: 1; }'
+                            ].join(' '),
+                            setup: function (editor) {
+                                editor.ui.registry.addToggleButton('woordtip', {
+                                    icon: 'info',
+                                    tooltip: 'Woorduitleg toevoegen / bewerken',
+                                    onAction: function () {
+                                        var node = editor.selection.getNode();
+                                        var span = editor.dom.getParent(node, 'span.woordtip');
+                                        var currentWord = span ? (span.textContent || span.innerText) : editor.selection.getContent({ format: 'text' });
+                                        var currentTip = span ? (span.getAttribute('data-tip') || '') : '';
+
+                                        if (!currentWord &amp;&amp; !span) {
+                                            editor.notificationManager.open({ text: 'Selecteer eerst een woord of zin.', type: 'warning', timeout: 2500 });
+                                            return;
+                                        }
+
+                                        var tip = window.prompt('Uitleg voor "' + currentWord + '":', currentTip);
+                                        if (tip === null) return;
+
+                                        if (tip.trim() === '') {
+                                            // Remove tooltip — keep inner text
+                                            if (span) {
+                                                editor.dom.setOuterHTML(span, span.innerHTML);
+                                            }
+                                            return;
+                                        }
+
+                                        if (span) {
+                                            editor.dom.setAttrib(span, 'data-tip', tip);
+                                        } else {
+                                            editor.selection.setContent(
+                                                '&lt;span class="woordtip" data-tip="' + tip.replace(/"/g, '&amp;quot;') + '"&gt;' +
+                                                editor.selection.getContent() +
+                                                '&lt;/span&gt;'
+                                            );
+                                        }
+                                    },
+                                    onSetup: function (api) {
+                                        editor.on('NodeChange', function () {
+                                            var node = editor.selection.getNode();
+                                            var span = editor.dom.getParent(node, 'span.woordtip');
+                                            api.setActive(!!span);
+                                        });
+                                    }
+                                });
+                            }
+                        });
+                    },
+                    sync: function () {
+                        if (window.tinymce) {
+                            window.tinymce.triggerSave();
+                        }
+                    },
+                    registerHooks: function () {
+                        if (this.hooksRegistered) {
+                            return;
+                        }
+                        this.hooksRegistered = true;
+
+                        var self = this;
+                        var facesAjax = (window.faces &amp;&amp; window.faces.ajax) || (window.jsf &amp;&amp; window.jsf.ajax);
+                        if (facesAjax) {
+                            facesAjax.addOnEvent(function (data) {
+                                if (data.status === 'begin') {
+                                    self.sync();
+                                }
+                                if (data.status === 'success') {
+                                    self.init();
+                                }
+                            });
+                        }
+
+                        if (window.jQuery) {
+                            window.jQuery(document).on('pfAjaxSend.edictumTinyMce', function () {
+                                self.sync();
+                            });
+                            window.jQuery(document).on('pfAjaxComplete.edictumTinyMce', function () {
+                                self.init();
+                            });
+                        }
+                    }
+                };
+                window.addEventListener('load', function () {
+                    window.EdictumTinyMce.init();
+                    window.EdictumTinyMce.registerHooks();
+                });
+                window.EdictumTinyMce.registerHooks();
+            </h:outputScript>
+        </ui:fragment>
+        <h:outputScript target="body">
+            window.EdictumUI = window.EdictumUI || {
+                groupPanelHiding: false,
+                lessonPanelHiding: false,
+                fadeOutGroupPanelAndHide: function () {
+                    if (this.groupPanelHiding) {
+                        return;
+                    }
+                    this.groupPanelHiding = true;
+                    var panel = document.querySelector('.method-browser');
+                    if (panel) {
+                        panel.classList.add('method-browser-fade-out');
+                    }
+                    window.setTimeout(function () {
+                        if (typeof window.toggleGroupPanelAfterFade === 'function') {
+                            window.toggleGroupPanelAfterFade();
+                        } else {
+                            window.EdictumUI.finishGroupPanelHide();
+                        }
+                    }, 1200);
+                },
+                fadeInGroupPanel: function () {
+                    var panel = document.querySelector('.method-browser');
+                    if (!panel) {
+                        return;
+                    }
+                    panel.classList.remove('method-browser-fade-out');
+                    panel.classList.add('method-browser-fade-in');
+                    window.setTimeout(function () {
+                        panel.classList.remove('method-browser-fade-in');
+                    }, 1200);
+                },
+                fadeOutLessonPanelAndHide: function () {
+                    if (this.lessonPanelHiding) {
+                        return;
+                    }
+                    this.lessonPanelHiding = true;
+                    var panel = document.querySelector('.lesson-list-panel');
+                    if (panel) {
+                        panel.classList.add('lesson-list-panel-fade-out');
+                    }
+                    window.setTimeout(function () {
+                        if (typeof window.toggleLessonPanelAfterFade === 'function') {
+                            window.toggleLessonPanelAfterFade();
+                        } else {
+                            window.EdictumUI.finishLessonPanelHide();
+                        }
+                    }, 1200);
+                },
+                fadeInLessonPanel: function () {
+                    var panel = document.querySelector('.lesson-list-panel');
+                    if (!panel) {
+                        return;
+                    }
+                    panel.classList.remove('lesson-list-panel-fade-out');
+                    panel.classList.add('lesson-list-panel-fade-in');
+                    window.setTimeout(function () {
+                        panel.classList.remove('lesson-list-panel-fade-in');
+                    }, 1200);
+                },
+                finishGroupPanelHide: function () {
+                    this.groupPanelHiding = false;
+                },
+                finishLessonPanelHide: function () {
+                    this.lessonPanelHiding = false;
+                },
+                fixGroupHeaders: function () {
+                    /* If PrimeFaces dynamic accordion renders group.name blank in facet,
+                       copy the title text (which always works) into the facet span */
+                    document.querySelectorAll('.method-browser .ui-accordion-header').forEach(function (header) {
+                        var titleText = header.textContent.trim()
+                            .replace(/^\s*[▲▼►◄]\s*/, '')  // remove PrimeFaces icon text
+                            .trim();
+                        var facetSpan = header.querySelector('.group-tab-header span');
+                        if (facetSpan &amp;&amp; facetSpan.textContent.trim() === '' &amp;&amp; titleText !== '') {
+                            facetSpan.textContent = titleText;
+                        }
+                    });
+                },
+                initWoordtips: function () {
+                    var tip = document.getElementById('woordtip-bubble');
+                    if (!tip) {
+                        tip = document.createElement('div');
+                        tip.id = 'woordtip-bubble';
+                        tip.className = 'woordtip-bubble';
+                        document.body.appendChild(tip);
+                    }
+                    document.querySelectorAll('.rich-lesson-text .woordtip, .assignment-dialog-body .woordtip').forEach(function (el) {
+                        if (el.dataset.woordtipBound) return;
+                        el.dataset.woordtipBound = '1';
+                        el.addEventListener('mouseenter', function (e) {
+                            var text = el.getAttribute('data-tip');
+                            if (!text) return;
+                            tip.textContent = text;
+                            tip.style.display = 'block';
+                            var rect = el.getBoundingClientRect();
+                            var left = rect.left + window.scrollX + (rect.width / 2);
+                            var top = rect.top + window.scrollY - 8;
+                            tip.style.left = left + 'px';
+                            tip.style.top = top + 'px';
+                            tip.style.transform = 'translateX(-50%) translateY(-100%)';
+                            tip.style.opacity = '1';
+                        });
+                        el.addEventListener('mouseleave', function () {
+                            tip.style.opacity = '0';
+                            window.setTimeout(function () { tip.style.display = 'none'; }, 180);
+                        });
+                    });
+                }
+            };
+            window.addEventListener('load', function () {
+                window.EdictumUI.fixGroupHeaders();
+                window.EdictumUI.initWoordtips();
+            });
+            if (window.jQuery) {
+                window.jQuery(document).on('pfAjaxComplete.edictumGroupHeaders', function () {
+                    window.EdictumUI.fixGroupHeaders();
+                    window.EdictumUI.initWoordtips();
+                });
+            }
+        </h:outputScript>
+    </h:head>
+    <h:body styleClass="portal-body">
+        <h:form id="portalForm" onsubmit="window.EdictumTinyMce &amp;&amp; window.EdictumTinyMce.sync();">
+            <p:growl id="messages" showDetail="false"/>
+            <p:remoteCommand name="toggleGroupPanelAfterFade"
+                             action="#{learningPortalBean.toggleGroupPanel}"
+                             process="@this"
+                             update="portalForm"
+                             oncomplete="window.EdictumUI.finishGroupPanelHide();"/>
+            <p:remoteCommand name="toggleLessonPanelAfterFade"
+                             action="#{learningPortalBean.toggleLessonPanel}"
+                             process="@this"
+                             update="portalForm"
+                             oncomplete="window.EdictumUI.finishLessonPanelHide();"/>
+            <div class="topbar">
+                <h1>Edictum2 Leerplatform</h1>
+                <div class="topbar-actions">
+                    <p:commandButton value="#{learningPortalBean.groupPanelVisible ? 'Lesgroepen verbergen' : 'Lesgroepen tonen'}"
+                                     icon="pi pi-sitemap"
+                                     action="#{learningPortalBean.toggleGroupPanel}"
+                                     update="portalForm"
+                                     onclick="if (#{learningPortalBean.groupPanelVisible}) { window.EdictumUI.fadeOutGroupPanelAndHide(); return false; }"
+                                     oncomplete="if (#{learningPortalBean.groupPanelVisible}) { window.EdictumUI.fadeInGroupPanel(); }"
+                                     styleClass="p-button-outlined topbar-toggle"/>
+                    <ui:fragment rendered="#{securityBean.realAdmin}">
+                        <p:commandButton value="#{userPreviewBean.previewMode ? 'Beheerweergave' : 'Gebruikersweergave'}"
+                                         icon="#{userPreviewBean.previewMode ? 'pi pi-eye-slash' : 'pi pi-eye'}"
+                                         action="#{userPreviewBean.toggle}"
+                                         process="@this"
+                                         update="portalForm"
+                                         styleClass="#{userPreviewBean.previewMode ? 'p-button-warning' : 'p-button-outlined'} topbar-toggle"
+                                         title="#{userPreviewBean.previewMode ? 'Terug naar beheerdersweergave' : 'Bekijk als gewone gebruiker'}"/>
+                    </ui:fragment>
+                    <ui:fragment rendered="#{not securityBean.loggedIn}">
+                        <h:link styleClass="admin-link" outcome="/login">Admin inloggen</h:link>
+                    </ui:fragment>
+                    <ui:fragment rendered="#{securityBean.loggedIn}">
+                        <span class="signed-in-user">#{securityBean.remoteUser}</span>
+                        <h:commandLink value="Uitloggen" action="#{securityBean.logout}" styleClass="admin-link"/>
+                    </ui:fragment>
+                </div>
+            </div>
+
+            <div class="home-layout #{learningPortalBean.groupPanelVisible ? '' : 'home-layout-single'}">
+                <ui:fragment rendered="#{learningPortalBean.groupPanelVisible}">
+                    <aside class="method-browser">
+                        <div class="panel-header-row">
+                            <h2>Lesgroepen</h2>
+                            <p:commandButton icon="pi pi-plus"
+                                             title="Groep toevoegen"
+                                             action="#{learningPortalBean.beginAddGroup}"
+                                             process="@this"
+                                             update="portalForm"
+                                             styleClass="p-button-text p-button-rounded p-button-sm"
+                                             rendered="#{securityBean.admin}"/>
+                        </div>
+
+                        <ui:fragment rendered="#{securityBean.admin and learningPortalBean.addingGroup}">
+                            <div class="admin-inline-form">
+                                <p:inputText value="#{learningPortalBean.newGroupName}"
+                                             placeholder="Naam groep"
+                                             styleClass="full-width"
+                                             required="true"/>
+                                <p:commandButton value="Toevoegen"
+                                                 action="#{learningPortalBean.saveNewGroup}"
+                                                 update="portalForm"
+                                                 styleClass="p-button-sm"/>
+                                <p:commandButton value="Annuleren"
+                                                 action="#{learningPortalBean.cancelAddGroup}"
+                                                 process="@this"
+                                                 update="portalForm"
+                                                 styleClass="p-button-sm p-button-secondary p-button-outlined"/>
+                            </div>
+                        </ui:fragment>
+
+                        <p:accordionPanel value="#{learningPortalBean.groups}" var="group" multiple="true" activeIndex="0">
+                            <p:tab title="#{group.name}">
+
+                                <div class="method-list">
+                                    <ui:fragment rendered="#{securityBean.admin}">
+                                        <div style="display:flex; justify-content:flex-end; margin-bottom:0.25rem;">
+                                            <p:commandButton icon="pi pi-trash"
+                                                             value="Groep verwijderen"
+                                                             action="#{learningPortalBean.deleteGroup(group.id)}"
+                                                             process="@this"
+                                                             update="portalForm"
+                                                             styleClass="p-button-text p-button-danger p-button-sm"
+                                                             onclick="if(!confirm('Groep verwijderen?\nLet op: de groep mag geen methoden meer bevatten.')){return false;}"/>
+                                        </div>
+                                    </ui:fragment>
+                                    <ui:repeat value="#{group.methods}" var="method">
+                                        <div class="method-row">
+                                            <p:commandLink value="#{method.name}"
+                                                           action="#{learningPortalBean.selectMethod(method.id)}"
+                                                           update=":portalForm"
+                                                           oncomplete="window.EdictumUI.fadeOutGroupPanelAndHide();"
+                                                           styleClass="method-button #{learningPortalBean.selectedMethod ne null and learningPortalBean.selectedMethod.id eq method.id ? 'method-button-active' : ''}"
+                                                           style="flex:1; margin-bottom:0;"/>
+                                            <p:commandButton icon="pi pi-trash"
+                                                             title="Methode verwijderen"
+                                                             action="#{learningPortalBean.deleteMethod(method.id)}"
+                                                             process="@this"
+                                                             update="portalForm"
+                                                             styleClass="p-button-text p-button-rounded p-button-danger p-button-sm"
+                                                             rendered="#{securityBean.admin}"
+                                                             onclick="if(!confirm('Methode \'#{method.name}\' verwijderen?\nLet op: de methode mag geen lessen meer bevatten.')){return false;}"/>
+                                        </div>
+                                    </ui:repeat>
+
+                                    <ui:fragment rendered="#{securityBean.admin}">
+                                        <ui:fragment rendered="#{learningPortalBean.addingMethod and learningPortalBean.addingMethodGroupId eq group.id}">
+                                            <div class="admin-inline-form" style="margin-top:0.5rem;">
+                                                <p:inputText value="#{learningPortalBean.newMethodName}"
+                                                             placeholder="Naam methode"
+                                                             styleClass="full-width"
+                                                             required="true"/>
+                                                <p:commandButton value="Toevoegen"
+                                                                 action="#{learningPortalBean.saveNewMethod}"
+                                                                 update="portalForm"
+                                                                 styleClass="p-button-sm"/>
+                                                <p:commandButton value="Annuleren"
+                                                                 action="#{learningPortalBean.cancelAddMethod}"
+                                                                 process="@this"
+                                                                 update="portalForm"
+                                                                 styleClass="p-button-sm p-button-secondary p-button-outlined"/>
+                                            </div>
+                                        </ui:fragment>
+                                        <ui:fragment rendered="#{not (learningPortalBean.addingMethod and learningPortalBean.addingMethodGroupId eq group.id)}">
+                                            <p:commandButton value="+ Methode"
+                                                             action="#{learningPortalBean.beginAddMethod(group.id)}"
+                                                             process="@this"
+                                                             update="portalForm"
+                                                             styleClass="p-button-text p-button-sm"
+                                                             style="margin-top:0.25rem; width:100%;"/>
+                                        </ui:fragment>
+                                    </ui:fragment>
+                                </div>
+                            </p:tab>
+                        </p:accordionPanel>
+                    </aside>
+                </ui:fragment>
+
+                <section class="lesson-workspace">
+                    <div class="section-tabs" style="display:flex; flex-wrap:wrap; gap:0.5rem; align-items:center; justify-content:flex-start;">
+                        <ui:fragment rendered="#{learningPortalBean.selectedMethod ne null}">
+                            <ui:repeat value="#{learningPortalBean.selectedMethod.sections}" var="section" varStatus="status">
+                                <ui:fragment rendered="#{securityBean.admin and learningPortalBean.editingSection and learningPortalBean.editingSectionId eq section.id}">
+                                    <div class="admin-inline-form" style="display:inline-flex; align-items:center; flex-wrap:nowrap;">
+                                        <p:inputText value="#{learningPortalBean.editingSectionName}"
+                                                     placeholder="Naam onderdeel"
+                                                     required="true"
+                                                     maxlength="120"/>
+                                        <p:commandButton value="Opslaan"
+                                                         action="#{learningPortalBean.saveEditedSection}"
+                                                         process="@form"
+                                                         update="portalForm"
+                                                         styleClass="p-button-sm"/>
+                                        <p:commandButton value="Annuleren"
+                                                         action="#{learningPortalBean.cancelEditSection}"
+                                                         process="@this"
+                                                         update="portalForm"
+                                                         styleClass="p-button-sm p-button-secondary p-button-outlined"/>
+                                    </div>
+                                </ui:fragment>
+                                <ui:fragment rendered="#{not (securityBean.admin and learningPortalBean.editingSection and learningPortalBean.editingSectionId eq section.id)}">
+                                    <div style="display:inline-flex; align-items:center; gap:0.15rem;">
+                                        <h:commandLink value="#{status.index + 1}. #{section.name}"
+                                                       action="#{learningPortalBean.selectSection(section.id)}"
+                                                       styleClass="section-pill #{learningPortalBean.selectedSection ne null and learningPortalBean.selectedSection.id eq section.id ? 'section-pill-active' : ''}"
+                                                       style="display:inline-flex; align-items:center; width:auto; margin:0; padding:0.35rem 0.85rem; border-radius:999px; text-decoration:none;">
+                                            <f:ajax render="portalForm"/>
+                                        </h:commandLink>
+                                        <ui:fragment rendered="#{securityBean.admin}">
+                                            <p:commandButton icon="pi pi-pencil"
+                                                             title="Onderdeel bewerken"
+                                                             action="#{learningPortalBean.beginEditSection(section.id)}"
+                                                             process="@this"
+                                                             update="portalForm"
+                                                             styleClass="p-button-text p-button-rounded p-button-sm"/>
+                                            <p:commandButton icon="pi pi-trash"
+                                                             title="Onderdeel verwijderen"
+                                                             action="#{learningPortalBean.deleteSection(section.id)}"
+                                                             process="@this"
+                                                             update="portalForm"
+                                                             styleClass="p-button-text p-button-rounded p-button-danger p-button-sm"
+                                                             onclick="if(!confirm('Onderdeel \'#{section.name}\' verwijderen?\nLet op: het onderdeel mag geen lessen meer bevatten.')){return false;}"/>
+                                        </ui:fragment>
+                                    </div>
+                                </ui:fragment>
+                            </ui:repeat>
+
+                            <ui:fragment rendered="#{securityBean.admin}">
+                                <ui:fragment rendered="#{learningPortalBean.addingSection}">
+                                    <div class="admin-inline-form" style="display:inline-flex; align-items:center; flex-wrap:nowrap;">
+                                        <p:inputText value="#{learningPortalBean.newSectionName}"
+                                                     placeholder="Naam onderdeel"
+                                                     required="true"
+                                                     maxlength="120"/>
+                                        <p:commandButton value="Toevoegen"
+                                                         action="#{learningPortalBean.saveNewSection}"
+                                                         process="@form"
+                                                         update="portalForm"
+                                                         styleClass="p-button-sm"/>
+                                        <p:commandButton value="Annuleren"
+                                                         action="#{learningPortalBean.cancelAddSection}"
+                                                         process="@this"
+                                                         update="portalForm"
+                                                         styleClass="p-button-sm p-button-secondary p-button-outlined"/>
+                                    </div>
+                                </ui:fragment>
+                                <ui:fragment rendered="#{not learningPortalBean.addingSection and not learningPortalBean.editingSection}">
+                                    <p:commandButton value="+ Onderdeel"
+                                                     action="#{learningPortalBean.beginAddSection}"
+                                                     process="@this"
+                                                     update="portalForm"
+                                                     styleClass="p-button-text p-button-sm section-pill"
+                                                     style="padding:0.35rem 0.85rem; border-radius:999px;"/>
+                                </ui:fragment>
+                            </ui:fragment>
+                        </ui:fragment>
+                    </div>
+
+                    <div class="workspace-controls">
+                        <p:commandButton value="#{learningPortalBean.lessonPanelVisible ? 'Lessenoverzicht verbergen' : 'Lessen tonen'}"
+                                         icon="pi pi-list"
+                                         action="#{learningPortalBean.toggleLessonPanel}"
+                                         update="portalForm"
+                                         onclick="if (#{learningPortalBean.lessonPanelVisible}) { window.EdictumUI.fadeOutLessonPanelAndHide(); return false; }"
+                                         oncomplete="if (#{learningPortalBean.lessonPanelVisible}) { window.EdictumUI.fadeInLessonPanel(); }"
+                                         styleClass="p-button-outlined"/>
+                    </div>
+
+                    <div class="workspace-content #{learningPortalBean.lessonPanelVisible ? '' : 'workspace-content-collapsed'}">
+                        <ui:fragment rendered="#{learningPortalBean.lessonPanelVisible}">
+                            <aside class="lesson-list-panel">
+                                <h3>Lessen</h3>
+                                <ui:fragment rendered="#{learningPortalBean.selectedSection ne null}">
+                                    <ui:repeat value="#{learningPortalBean.selectedSection.lessons}" var="lesson" varStatus="lessonStatus">
+                                        <div class="lesson-row">
+                                            <h:commandLink value="#{lessonStatus.index + 1}. #{lesson.title}"
+                                                           action="#{learningPortalBean.selectLesson(lesson.id)}"
+                                                           styleClass="lesson-link #{learningPortalBean.selectedLesson ne null and learningPortalBean.selectedLesson.id eq lesson.id ? 'lesson-link-active' : ''}">
+                                                <f:ajax render="portalForm"/>
+                                            </h:commandLink>
+                                            <ui:fragment rendered="#{securityBean.admin}">
+                                                <p:commandButton icon="pi pi-arrow-up"
+                                                                 title="Omhoog"
+                                                                 action="#{learningPortalBean.moveLessonUp(lesson.id)}"
+                                                                 immediate="true"
+                                                                 process="@this"
+                                                                 update=":portalForm"
+                                                                 styleClass="p-button-text p-button-rounded p-button-sm"/>
+                                                <p:commandButton icon="pi pi-arrow-down"
+                                                                 title="Omlaag"
+                                                                 action="#{learningPortalBean.moveLessonDown(lesson.id)}"
+                                                                 immediate="true"
+                                                                 process="@this"
+                                                                 update=":portalForm"
+                                                                 styleClass="p-button-text p-button-rounded p-button-sm"/>
+                                                <p:commandButton icon="pi pi-trash"
+                                                                 title="Les verwijderen"
+                                                                 action="#{learningPortalBean.deleteLesson(lesson.id)}"
+                                                                 process="@this"
+                                                                 update="portalForm"
+                                                                 styleClass="p-button-text p-button-rounded p-button-danger p-button-sm"
+                                                                 onclick="if(!confirm('Les verwijderen?')){return false;}"/>
+                                            </ui:fragment>
+                                        </div>
+                                    </ui:repeat>
+                                </ui:fragment>
+                            </aside>
+                        </ui:fragment>
+
+                        <article class="lesson-article">
+                            <ui:fragment rendered="#{learningPortalBean.selectedLesson ne null and not learningPortalBean.addingLesson}">
+                                <div class="lesson-article-header">
+                                    <h1>#{learningPortalBean.editMode ? learningPortalBean.editingTitle : (learningPortalBean.selectedLessonIndex gt 0 ? learningPortalBean.selectedLessonIndex.toString().concat('. ') : '').concat(learningPortalBean.selectedLesson.title)}</h1>
+                                    <div class="lesson-article-actions">
+                                        <p:commandButton icon="pi pi-pencil"
+                                                         title="Les bewerken"
+                                                         action="#{learningPortalBean.beginEditSelectedLesson}"
+                                                         process="@this"
+                                                         update="portalForm"
+                                                         styleClass="p-button-text p-button-rounded lesson-edit-button"
+                                                         rendered="#{securityBean.admin and not learningPortalBean.editMode}"/>
+                                        <p:commandButton icon="pi pi-plus"
+                                                         title="Nieuwe les"
+                                                         action="#{learningPortalBean.beginAddLesson}"
+                                                         process="@this"
+                                                         update="portalForm"
+                                                         styleClass="p-button-text p-button-rounded lesson-edit-button"
+                                                         rendered="#{securityBean.admin and not learningPortalBean.editMode}"/>
+                                        <p:commandButton icon="pi pi-trash"
+                                                         title="Les verwijderen"
+                                                         action="#{learningPortalBean.deleteSelectedLesson}"
+                                                         process="@this"
+                                                         update="portalForm"
+                                                         styleClass="p-button-text p-button-rounded p-button-danger lesson-edit-button"
+                                                         rendered="#{securityBean.admin and not learningPortalBean.editMode}"
+                                                         onclick="if(!confirm('Les verwijderen?')){return false;}"/>
+                                    </div>
+                                </div>
+                                <ui:fragment rendered="#{learningPortalBean.editMode}">
+                                    <div class="lesson-editor-form">
+                                        <p:outputLabel for="lessonTitle" value="Lestitel"/>
+                                        <p:inputText id="lessonTitle"
+                                                     value="#{learningPortalBean.editingTitle}"
+                                                     required="true"
+                                                     maxlength="150"
+                                                     styleClass="full-width"/>
+
+                                        <p:outputLabel for="lessonContent" value="Lesinhoud"/>
+                                        <h:inputTextarea id="lessonContent"
+                                                         value="#{learningPortalBean.editingContent}"
+                                                         styleClass="full-width lesson-editor"
+                                                         rows="16"/>
+
+                                        <div class="lesson-editor-actions">
+                                            <p:commandButton value="Opslaan"
+                                                             action="#{learningPortalBean.saveSelectedLesson}"
+                                                             update="portalForm"
+                                                             onstart="window.EdictumTinyMce &amp;&amp; window.EdictumTinyMce.sync();"/>
+                                            <p:commandButton value="Annuleren"
+                                                             action="#{learningPortalBean.cancelEditSelectedLesson}"
+                                                             process="@this"
+                                                             update="portalForm"
+                                                             styleClass="p-button-secondary p-button-outlined"/>
+                                        </div>
+                                    </div>
+                                </ui:fragment>
+                                <ui:fragment rendered="#{not learningPortalBean.editMode}">
+                                    <h:outputText value="#{learningPortalBean.selectedLesson.content}" escape="false" styleClass="lesson-text rich-lesson-text"/>
+
+                                    <!-- Assignments section -->
+                                    <div class="assignments-section">
+                                        <div class="assignments-header">
+                                            <h3 class="assignments-title">Opdrachten</h3>
+                                            <p:commandButton icon="pi pi-plus"
+                                                             title="Nieuwe opdracht"
+                                                             action="#{learningPortalBean.beginAddAssignment}"
+                                                             process="@this"
+                                                             update="portalForm"
+                                                             styleClass="p-button-text p-button-rounded p-button-sm"
+                                                             rendered="#{securityBean.admin and not learningPortalBean.addingAssignment}"/>
+                                        </div>
+
+                                        <ui:fragment rendered="#{securityBean.admin and learningPortalBean.addingAssignment}">
+                                            <div class="admin-inline-form assignment-add-form">
+                                                <p:outputLabel value="Opdrachttitel"/>
+                                                <p:inputText value="#{learningPortalBean.newAssignmentTitle}"
+                                                             placeholder="Titel"
+                                                             required="true"
+                                                             maxlength="200"
+                                                             styleClass="full-width"/>
+                                                <p:outputLabel value="Omschrijving"/>
+                                                <h:inputTextarea value="#{learningPortalBean.newAssignmentDescription}"
+                                                                 styleClass="full-width assignment-editor"
+                                                                 rows="8"/>
+                                                <div class="lesson-editor-actions">
+                                                    <p:commandButton value="Opslaan"
+                                                                     action="#{learningPortalBean.saveNewAssignment}"
+                                                                     update="portalForm"
+                                                                     onstart="window.EdictumTinyMce &amp;&amp; window.EdictumTinyMce.sync();"
+                                                                     styleClass="p-button-sm"/>
+                                                    <p:commandButton value="Annuleren"
+                                                                     action="#{learningPortalBean.cancelAddAssignment}"
+                                                                     process="@this"
+                                                                     update="portalForm"
+                                                                     styleClass="p-button-sm p-button-secondary p-button-outlined"/>
+                                                </div>
+                                            </div>
+                                        </ui:fragment>
+
+                                        <div class="assignment-list">
+                                            <ui:repeat value="#{learningPortalBean.selectedLesson.assignments}" var="assignment" varStatus="aStatus">
+                                                <div class="assignment-row">
+                                                    <p:commandButton value="#{learningPortalBean.selectedLessonIndex}.#{aStatus.index + 1}  #{assignment.title}"
+                                                                     action="#{learningPortalBean.openAssignment(assignment.id)}"
+                                                                     process="@this"
+                                                                     update="portalForm"
+                                                                     oncomplete="PF('assignmentDlg').show();"
+                                                                     styleClass="p-button-outlined p-button-sm assignment-btn"/>
+                                                    <ui:fragment rendered="#{securityBean.admin}">
+                                                        <p:commandButton icon="pi pi-arrow-up"
+                                                                         title="Omhoog"
+                                                                         action="#{learningPortalBean.moveAssignmentUp(assignment.id)}"
+                                                                         immediate="true"
+                                                                         process="@this"
+                                                                         update=":portalForm"
+                                                                         styleClass="p-button-text p-button-rounded p-button-sm"/>
+                                                        <p:commandButton icon="pi pi-arrow-down"
+                                                                         title="Omlaag"
+                                                                         action="#{learningPortalBean.moveAssignmentDown(assignment.id)}"
+                                                                         immediate="true"
+                                                                         process="@this"
+                                                                         update=":portalForm"
+                                                                         styleClass="p-button-text p-button-rounded p-button-sm"/>
+                                                        <p:commandButton icon="pi pi-trash"
+                                                                         title="Opdracht verwijderen"
+                                                                         action="#{learningPortalBean.deleteAssignment(assignment.id)}"
+                                                                         process="@this"
+                                                                         update="portalForm"
+                                                                         styleClass="p-button-text p-button-rounded p-button-danger p-button-sm"
+                                                                         onclick="if(!confirm('Opdracht verwijderen?')){return false;}"/>
+                                                    </ui:fragment>
+                                                </div>
+                                            </ui:repeat>
+                                        </div>
+                                    </div>
+
+                                    <div class="lesson-navigation">
+                                        <p:commandButton value="Vorige les"
+                                                         icon="pi pi-arrow-left"
+                                                         iconPos="left"
+                                                         action="#{learningPortalBean.selectPreviousLesson}"
+                                                         process="@this"
+                                                         update="portalForm"
+                                                         disabled="#{not learningPortalBean.previousLessonAvailable}"
+                                                         styleClass="p-button-outlined"/>
+                                        <p:commandButton value="Volgende les"
+                                                         icon="pi pi-arrow-right"
+                                                         iconPos="right"
+                                                         action="#{learningPortalBean.selectNextLesson}"
+                                                         process="@this"
+                                                         update="portalForm"
+                                                         disabled="#{not learningPortalBean.nextLessonAvailable}"
+                                                         styleClass="p-button-outlined"/>
+                                    </div>
+                                </ui:fragment>
+                            </ui:fragment>
+
+                            <ui:fragment rendered="#{learningPortalBean.addingLesson}">
+                                <div class="lesson-article-header">
+                                    <h2>Nieuwe les toevoegen</h2>
+                                </div>
+                                <div class="lesson-editor-form">
+                                    <p:outputLabel for="newLessonTitle" value="Lestitel"/>
+                                    <p:inputText id="newLessonTitle"
+                                                 value="#{learningPortalBean.newLessonTitle}"
+                                                 required="true"
+                                                 maxlength="150"
+                                                 styleClass="full-width"/>
+
+                                    <p:outputLabel for="newLessonContent" value="Lesinhoud"/>
+                                    <h:inputTextarea id="newLessonContent"
+                                                     value="#{learningPortalBean.newLessonContent}"
+                                                     styleClass="full-width lesson-editor"
+                                                     rows="16"/>
+
+                                    <div class="lesson-editor-actions">
+                                        <p:commandButton value="Opslaan"
+                                                         action="#{learningPortalBean.saveNewLesson}"
+                                                         update="portalForm"
+                                                         onstart="window.EdictumTinyMce &amp;&amp; window.EdictumTinyMce.sync();"/>
+                                        <p:commandButton value="Annuleren"
+                                                         action="#{learningPortalBean.cancelAddingLesson}"
+                                                         process="@this"
+                                                         update="portalForm"
+                                                         styleClass="p-button-secondary p-button-outlined"/>
+                                    </div>
+                                </div>
+                            </ui:fragment>
+
+                            <ui:fragment rendered="#{learningPortalBean.selectedLesson eq null and not learningPortalBean.addingLesson}">
+                                                <ui:fragment rendered="#{learningPortalBean.groups.isEmpty() and securityBean.admin}">
+                                                    <div class="empty-state">
+                                                        <i class="pi pi-book empty-state-icon"/>
+                                                        <h2>Welkom bij Edictum</h2>
+                                                        <p>Er zijn nog geen lessen. Begin met het aanmaken van een groep.</p>
+                                                        <p:commandButton value="+ Eerste groep aanmaken"
+                                                                         action="#{learningPortalBean.beginAddGroup}"
+                                                                         process="@this"
+                                                                         update="portalForm"
+                                                                         styleClass="p-button-lg empty-state-btn"/>
+                                                    </div>
+                                                </ui:fragment>
+                                                <ui:fragment rendered="#{not learningPortalBean.groups.isEmpty() or not securityBean.admin}">
+                                                    <div class="lesson-article-header">
+                                                        <h2>Kies een les</h2>
+                                                        <p:commandButton icon="pi pi-plus"
+                                                                         title="Nieuwe les"
+                                                                         action="#{learningPortalBean.beginAddLesson}"
+                                                                         process="@this"
+                                                                         update="portalForm"
+                                                                         styleClass="p-button-text p-button-rounded lesson-edit-button"
+                                                                         rendered="#{securityBean.admin and learningPortalBean.selectedSection ne null}"/>
+                                                    </div>
+                                                    <p class="lesson-text">Selecteer een groep, methode, onderdeel en les om te beginnen.</p>
+                                                </ui:fragment>
+                                            </ui:fragment>
+                        </article>
+                    </div>
+                </section>
+            </div>
+        </h:form>
+
+        <!-- Assignment dialog -->
+        <h:form id="assignmentDlgForm">
+            <p:dialog widgetVar="assignmentDlg"
+                      modal="true"
+                      dynamic="true"
+                      closable="true"
+                      closeOnEscape="true"
+                      responsive="true"
+                      width="700"
+                      styleClass="assignment-dialog"
+                      onHide="#{learningPortalBean.closeAssignmentDialog()}">
+                <f:facet name="header">
+                    <span>
+                        <ui:fragment rendered="#{learningPortalBean.viewingAssignment ne null}">
+                            Opdracht #{learningPortalBean.selectedLessonIndex}.#{learningPortalBean.viewingAssignmentIndex}
+                        </ui:fragment>
+                    </span>
+                </f:facet>
+
+                <ui:fragment rendered="#{learningPortalBean.viewingAssignment ne null and not learningPortalBean.assignmentDialogEditMode}">
+                    <div class="assignment-dialog-title">
+                        <h3>#{learningPortalBean.viewingAssignment.title}</h3>
+                    </div>
+                    <h:outputText value="#{learningPortalBean.viewingAssignment.description}"
+                                  escape="false"
+                                  styleClass="assignment-dialog-body rich-lesson-text"/>
+                    <div class="assignment-dialog-footer">
+                        <ui:fragment rendered="#{securityBean.admin}">
+                            <p:commandButton value="Bewerken"
+                                             icon="pi pi-pencil"
+                                             action="#{learningPortalBean.beginEditAssignmentInDialog}"
+                                             process="@this"
+                                             update="assignmentDlgForm"
+                                             styleClass="p-button-outlined p-button-sm"
+                                             oncomplete="window.EdictumTinyMce &amp;&amp; window.EdictumTinyMce.init();"/>
+                            <p:commandButton value="Verwijderen"
+                                             icon="pi pi-trash"
+                                             action="#{learningPortalBean.deleteAssignment(learningPortalBean.viewingAssignment.id)}"
+                                             process="@this"
+                                             update="portalForm assignmentDlgForm"
+                                             styleClass="p-button-outlined p-button-danger p-button-sm"
+                                             onclick="if(!confirm('Opdracht verwijderen?')){return false;}"
+                                             oncomplete="PF('assignmentDlg').hide();"/>
+                        </ui:fragment>
+                        <p:commandButton value="Sluiten"
+                                         process="@this"
+                                         onclick="PF('assignmentDlg').hide(); return false;"
+                                         styleClass="p-button-secondary p-button-outlined p-button-sm"/>
+                    </div>
+                </ui:fragment>
+
+                <ui:fragment rendered="#{learningPortalBean.viewingAssignment ne null and learningPortalBean.assignmentDialogEditMode}">
+                    <div class="admin-inline-form">
+                        <p:outputLabel value="Opdrachttitel"/>
+                        <p:inputText value="#{learningPortalBean.editingAssignmentTitle}"
+                                     required="true"
+                                     maxlength="200"
+                                     styleClass="full-width"/>
+                        <p:outputLabel value="Omschrijving"/>
+                        <h:inputTextarea value="#{learningPortalBean.editingAssignmentDescription}"
+                                         styleClass="full-width assignment-editor"
+                                         rows="10"/>
+                        <div class="lesson-editor-actions">
+                            <p:commandButton value="Opslaan"
+                                             action="#{learningPortalBean.saveEditedAssignment}"
+                                             update="portalForm assignmentDlgForm"
+                                             onstart="window.EdictumTinyMce &amp;&amp; window.EdictumTinyMce.sync();"
+                                             styleClass="p-button-sm"/>
+                            <p:commandButton value="Annuleren"
+                                             action="#{learningPortalBean.cancelEditAssignment}"
+                                             process="@this"
+                                             update="assignmentDlgForm"
+                                             styleClass="p-button-sm p-button-secondary p-button-outlined"/>
+                        </div>
+                    </div>
+                </ui:fragment>
+            </p:dialog>
+        </h:form>
+    </h:body>
+</html>

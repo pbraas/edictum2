@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="jakarta.faces.html">
+    <h:head>
+        <title>Inloggen mislukt</title>
+        <h:outputStylesheet library="css" name="app.css"/>
+    </h:head>
+    <h:body styleClass="portal-body">
+        <div class="login-shell">
+            <section class="login-card">
+                <div class="login-brand-panel">
+                    <span class="login-badge">Edictum2</span>
+                    <h1>Toegang vereist</h1>
+                    <p class="login-hero-text">Uw account heeft een geldig GlassFish realm-wachtwoord en de juiste gekoppelde groep nodig voordat beheertools beschikbaar worden.</p>
+                    <div class="login-feature-list">
+                        <div class="login-feature-item">
+                            <span class="login-feature-dot"></span>
+                            <span>Controleer of de gebruiker bestaat in de `file` realm.</span>
+                        </div>
+                        <div class="login-feature-item">
+                            <span class="login-feature-dot"></span>
+                            <span>Controleer of het account tot de juiste groep behoort, zoals `admin`.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="login-form-panel">
+                    <div class="login-form-header">
+                        <h2>Opnieuw proberen</h2>
+                        <p class="login-error">Verificatie mislukt. Controleer uw GlassFish gebruikersnaam, wachtwoord en toegewezen groep.</p>
+                    </div>
+                    <form method="post" action="#{facesContext.externalContext.requestContextPath}/j_security_check" class="login-form">
+                        <label for="j_username">Gebruikersnaam</label>
+                        <input id="j_username" name="j_username" type="text" autocomplete="username" required="required"/>
+
+                        <label for="j_password">Wachtwoord</label>
+                        <input id="j_password" name="j_password" type="password" autocomplete="current-password" required="required"/>
+
+                        <button type="submit">Inloggen</button>
+                    </form>
+                    <h:link outcome="/index" value="Terug naar lessen" styleClass="login-back"/>
+                </div>
+            </section>
+        </div>
+    </h:body>
+</html>

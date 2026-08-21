@@ -1,0 +1,814 @@
+:root {
+    --edictum-gold: #bb8c09;
+    --edictum-gold-soft: #e6cc88;
+    --edictum-navy: #1b2a44;
+    --edictum-navy-deep: #141f33;
+    --edictum-surface: #ffffff;
+    --edictum-surface-soft: #f7f5ef;
+    --edictum-text: #1b2434;
+}
+
+.portal-body {
+    margin: 0;
+    font-family: "Segoe UI", Tahoma, sans-serif;
+    background:
+        radial-gradient(circle at top right, rgba(187, 140, 9, 0.12), transparent 34%),
+        radial-gradient(circle at bottom left, rgba(27, 42, 68, 0.13), transparent 36%),
+        #f4f5f8;
+    color: var(--edictum-text);
+}
+
+.topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 2rem;
+    background: linear-gradient(120deg, var(--edictum-navy-deep), var(--edictum-navy));
+    color: #ffffff;
+    box-shadow: 0 10px 28px rgba(20, 31, 51, 0.32);
+}
+
+.topbar h1 {
+    margin: 0;
+    font-size: 1.35rem;
+}
+
+.topbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.signed-in-user {
+    font-weight: 600;
+    color: var(--edictum-gold-soft);
+}
+
+.topbar-toggle.p-button {
+    border-color: var(--edictum-gold-soft);
+    color: var(--edictum-gold-soft);
+}
+
+.topbar-toggle.p-button:hover {
+    background: rgba(187, 140, 9, 0.2);
+    border-color: var(--edictum-gold);
+    color: #ffffff;
+}
+
+.admin-link {
+    color: var(--edictum-gold-soft);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.admin-link:hover {
+    text-decoration: underline;
+}
+
+.home-layout {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 1rem;
+    padding: 1rem;
+}
+
+.home-layout-single {
+    grid-template-columns: 1fr;
+}
+
+.method-browser,
+.lesson-workspace,
+.admin-card {
+    background: var(--edictum-surface);
+    border: 1px solid rgba(27, 42, 68, 0.1);
+    border-radius: 12px;
+    box-shadow: 0 12px 28px rgba(27, 42, 68, 0.1);
+    padding: 1rem;
+}
+
+.method-browser {
+    opacity: 1;
+    transform: scaleY(1);
+    transform-origin: top;
+    max-height: 2000px;
+    overflow: hidden;
+    transition: opacity 1.2s ease, transform 1.2s ease, max-height 1.2s ease;
+}
+
+.method-browser-fade-out {
+    opacity: 0;
+    transform: scaleY(0.20);
+    max-height: 0;
+}
+
+.method-browser-fade-in {
+    animation: method-browser-fade-in 1.2s ease;
+}
+
+@keyframes method-browser-fade-in {
+    from {
+        opacity: 0;
+        transform: scaleY(0.20);
+        max-height: 0;
+    }
+    to {
+        opacity: 1;
+        transform: scaleY(1);
+        max-height: 2000px;
+    }
+}
+
+.method-browser h2,
+.lesson-workspace h3,
+.admin-card h2 {
+    margin-top: 0;
+}
+
+.method-list {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+}
+
+.method-button {
+    display: block !important;
+    width: 100%;
+    margin-bottom: 0.5rem;
+    padding: 0.55rem 0.8rem;
+    border-radius: 0.6rem;
+    text-decoration: none;
+    color: inherit;
+    font: 500 0.95rem/1.2 "Segoe UI", Arial, sans-serif;
+    background: rgba(27, 42, 68, 0.04);
+    border: 1px solid rgba(27, 42, 68, 0.08);
+    transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.method-button:hover {
+    background: rgba(187, 140, 9, 0.12);
+    border-color: rgba(187, 140, 9, 0.5);
+    transform: translateY(-1px);
+}
+
+.section-pill {
+    display: inline-flex !important;
+    align-items: center;
+    width: auto !important;
+    margin: 0;
+    padding: 0.35rem 0.85rem;
+    border-radius: 999px;
+    font: 600 0.95rem/1.2 "Segoe UI", Arial, sans-serif;
+    text-decoration: none;
+    color: var(--edictum-navy);
+    background: rgba(27, 42, 68, 0.05);
+    border: 1px solid rgba(27, 42, 68, 0.12);
+    transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.section-pill:hover {
+    background: rgba(187, 140, 9, 0.12);
+    border-color: rgba(187, 140, 9, 0.45);
+}
+
+.lesson-link {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    margin-bottom: 0.5rem;
+    padding: 0.6rem 0.85rem;
+    border-radius: 999px !important;
+    text-align: left;
+    text-decoration: none !important;
+    font: 500 0.95rem/1.3 "Segoe UI", Arial, sans-serif;
+    color: inherit;
+    background: rgba(27, 42, 68, 0.04);
+    border: 1px solid rgba(27, 42, 68, 0.08);
+    transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.lesson-link:hover {
+    background: rgba(187, 140, 9, 0.12);
+    border-color: rgba(187, 140, 9, 0.45);
+    transform: translateY(-1px);
+}
+
+.method-button-active,
+.section-pill-active,
+.lesson-link-active,
+.ui-commandlink.method-button-active,
+.ui-commandlink.section-pill-active,
+.ui-commandlink.lesson-link-active {
+    background: linear-gradient(135deg, var(--edictum-navy), var(--edictum-navy-deep));
+    border-color: var(--edictum-gold);
+    color: #ffffff;
+    border-radius: 999px;
+    box-shadow: 0 8px 16px rgba(20, 31, 51, 0.24);
+}
+
+.method-button-active,
+.ui-commandlink.method-button-active {
+    color: #ffffff !important;
+    border-radius: 0.6rem;
+}
+
+.lesson-link-active,
+.ui-commandlink.lesson-link-active {
+    color: #ffffff !important;
+    background: linear-gradient(135deg, var(--edictum-navy), var(--edictum-navy-deep)) !important;
+}
+
+.section-tabs {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+    align-items: center;
+    justify-content: flex-start;
+    overflow-x: auto;
+    margin-bottom: 1rem;
+}
+
+.section-tabs h3 {
+    margin: 0;
+    margin-right: 0.5rem;
+    white-space: nowrap;
+}
+
+.workspace-controls {
+    margin-bottom: 1rem;
+}
+
+.workspace-content {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 1rem;
+}
+
+.workspace-content-collapsed {
+    grid-template-columns: 1fr;
+}
+
+.lesson-list-panel {
+    border: 1px solid rgba(27, 42, 68, 0.14);
+    border-radius: 8px;
+    padding: 0.75rem;
+    background: var(--edictum-surface-soft);
+    opacity: 1;
+    transform: scaleY(1);
+    transform-origin: top;
+    max-height: 2000px;
+    overflow: hidden;
+    transition: opacity 1.2s ease, transform 1.2s ease, max-height 1.2s ease;
+}
+
+.lesson-list-panel-fade-out {
+    opacity: 0;
+    transform: scaleY(0.97);
+    max-height: 0;
+}
+
+.lesson-list-panel-fade-in {
+    animation: lesson-list-panel-fade-in 1.2s ease;
+}
+
+@keyframes lesson-list-panel-fade-in {
+    from {
+        opacity: 0;
+        transform: scaleY(0.97);
+        max-height: 0;
+    }
+    to {
+        opacity: 1;
+        transform: scaleY(1);
+        max-height: 2000px;
+    }
+}
+
+.lesson-article {
+    border: 1px solid rgba(27, 42, 68, 0.14);
+    border-radius: 8px;
+    padding: 1.2rem;
+    min-height: 300px;
+    background: #ffffff;
+}
+
+.lesson-article h1, h2, h3 {
+    margin-bottom: 0px;
+}
+
+
+.lesson-article-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.lesson-article-header h2 {
+    margin-bottom: 0;
+    flex: 1;
+}
+
+.lesson-article-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    flex-shrink: 0;
+}
+
+.panel-header-row {    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.panel-header-row h2,
+.panel-header-row h3 {
+    margin: 0;
+}
+
+/* Group accordion header with inline delete button */
+.group-tab-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    gap: 0.5rem;
+    pointer-events: none; /* let header toggle accordion on click */
+}
+
+.group-tab-header .p-button {
+    pointer-events: auto; /* but button should be clickable */
+}
+
+.method-row {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin-bottom: 0.5rem;
+}
+
+.method-row .method-button {
+    flex: 1;
+    margin-bottom: 0;
+}
+
+.lesson-row {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin-bottom: 0.5rem;
+}
+
+.lesson-row .lesson-link {
+    flex: 1;
+    margin-bottom: 0;
+}
+
+.admin-inline-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    padding: 0.6rem 0.5rem;
+    background: rgba(27, 42, 68, 0.04);
+    border: 1px solid rgba(27, 42, 68, 0.1);
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+}
+
+.admin-inline-form .p-button {
+    align-self: flex-start;
+}
+
+
+
+.lesson-text {
+    line-height: 1.65;
+}
+
+.rich-lesson-text {
+    display: block;
+}
+
+.lesson-navigation {
+    margin-top: 1.25rem;
+    display: flex;
+    justify-content: flex-start;
+    gap: 0.75rem;
+}
+
+.lesson-editor-form {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.lesson-editor-form textarea {
+    min-height: 320px;
+    resize: vertical;
+}
+
+.lesson-editor-actions {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.login-shell {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    background:
+        radial-gradient(circle at top left, rgba(187, 140, 9, 0.22), transparent 32%),
+        radial-gradient(circle at bottom right, rgba(27, 42, 68, 0.24), transparent 28%),
+        linear-gradient(135deg, #f6f1df 0%, #f6f6f8 46%, #eef0f5 100%);
+}
+
+.login-card {
+    width: min(100%, 980px);
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.75);
+    border-radius: 24px;
+    box-shadow: 0 30px 80px rgba(29, 37, 48, 0.16);
+    backdrop-filter: blur(10px);
+}
+
+.login-brand-panel {
+    padding: 2.5rem;
+    color: #ffffff;
+    background:
+        linear-gradient(160deg, rgba(20, 31, 51, 0.1), rgba(20, 31, 51, 0.6)),
+        linear-gradient(135deg, var(--edictum-navy) 0%, var(--edictum-navy-deep) 62%, #0d1422 100%);
+}
+
+.login-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.4rem 0.8rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    font: 700 0.78rem/1 "Segoe UI", Arial, sans-serif;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.login-card h1,
+.login-form-header h2 {
+    margin-top: 0;
+}
+
+.login-brand-panel h1 {
+    margin: 1.1rem 0 0.75rem;
+    font-size: clamp(2rem, 4vw, 3rem);
+    line-height: 1.05;
+}
+
+.login-hero-text {
+    max-width: 34rem;
+    margin: 0 0 1.5rem;
+    color: rgba(255, 255, 255, 0.88);
+    font-size: 1rem;
+    line-height: 1.7;
+}
+
+.login-feature-list {
+    display: grid;
+    gap: 0.9rem;
+}
+
+.login-feature-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    color: rgba(255, 255, 255, 0.94);
+    line-height: 1.5;
+}
+
+.login-feature-dot {
+    width: 0.7rem;
+    height: 0.7rem;
+    margin-top: 0.35rem;
+    border-radius: 50%;
+    background: var(--edictum-gold-soft);
+    box-shadow: 0 0 0 0.35rem rgba(187, 140, 9, 0.2);
+    flex-shrink: 0;
+}
+
+.login-form-panel {
+    padding: 2.5rem;
+    background: rgba(255, 255, 255, 0.92);
+}
+
+.login-form-header {
+    margin-bottom: 1.5rem;
+}
+
+.login-form-header h2 {
+    margin-bottom: 0.35rem;
+    color: var(--edictum-navy);
+    font-size: 1.75rem;
+}
+
+.login-help,
+.login-error {
+    margin-bottom: 0;
+    line-height: 1.5;
+    color: #5c667a;
+}
+
+.login-error {
+    color: #b42318;
+    font-weight: 600;
+}
+
+.login-form {
+    display: grid;
+    gap: 0.7rem;
+}
+
+.login-form label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #344054;
+}
+
+.login-form input {
+    padding: 0.9rem 1rem;
+    border: 1px solid #d5dbe6;
+    border-radius: 0.9rem;
+    font: inherit;
+    background: #f9fbff;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.login-form input:focus {
+    outline: none;
+    border-color: var(--edictum-gold);
+    box-shadow: 0 0 0 0.25rem rgba(187, 140, 9, 0.18);
+    background: #ffffff;
+}
+
+.login-form button {
+    margin-top: 0.8rem;
+    padding: 0.9rem 1rem;
+    border: 0;
+    border-radius: 0.95rem;
+    background: linear-gradient(135deg, var(--edictum-navy) 0%, var(--edictum-gold) 100%);
+    color: #ffffff;
+    font: 600 0.95rem/1.2 "Segoe UI", Arial, sans-serif;
+    cursor: pointer;
+    box-shadow: 0 16px 28px rgba(20, 31, 51, 0.26);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+}
+
+/* ── Assignments ─────────────────────────────────────────────────────────── */
+
+.assignments-section {
+    margin-top: 2.5rem;
+    border-top: 2px solid var(--edictum-gold-soft);
+    padding-top: 1.25rem;
+}
+
+.assignments-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.assignments-title {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--edictum-navy);
+    flex: 1;
+}
+
+.assignment-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: flex-start;
+}
+
+.assignment-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+}
+
+.assignment-btn.p-button {
+    justify-content: flex-start;
+    text-align: left;
+    border-color: var(--edictum-navy);
+    color: var(--edictum-navy);
+    font-weight: 600;
+}
+
+.assignment-btn.p-button:hover {
+    background: var(--edictum-navy);
+    color: #fff;
+}
+
+.assignment-add-form {
+    margin-bottom: 1rem;
+    padding: 0.75rem;
+    background: var(--edictum-surface-soft);
+    border-radius: 0.5rem;
+    border: 1px solid var(--edictum-gold-soft);
+}
+
+/* Assignment dialog */
+.assignment-dialog .assignment-dialog-title h3 {
+    margin: 0 0 0.75rem 0;
+    font-size: 1.15rem;
+    color: var(--edictum-navy);
+}
+
+.assignment-dialog .assignment-dialog-body {
+    min-height: 5rem;
+    padding: 0.5rem 0;
+}
+
+.assignment-dialog-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid #e0e0e0;
+}
+
+/* ── Woorduitleg tooltip ─────────────────────────────────────────────────── */
+
+.woordtip {
+    border-bottom: 2px dotted var(--edictum-gold);
+    cursor: help;
+    color: inherit;
+}
+
+.woordtip-bubble {
+    display: none;
+    position: absolute;
+    background: var(--edictum-navy);
+    color: #fff;
+    padding: 0.4rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.83rem;
+    max-width: 280px;
+    min-width: 80px;
+    text-align: center;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.18s ease;
+    z-index: 99999;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+/* ── Empty state ─────────────────────────────────────────────────────────── */
+
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 4rem 2rem;
+    gap: 0.75rem;
+    color: var(--edictum-text);
+}
+
+.empty-state-icon {
+    font-size: 3.5rem;
+    color: var(--edictum-gold);
+    margin-bottom: 0.5rem;
+}
+
+.empty-state h2 {
+    margin: 0;
+    font-size: 1.6rem;
+    color: var(--edictum-navy);
+}
+
+.empty-state p {
+    margin: 0;
+    color: #666;
+    font-size: 1rem;
+}
+
+.empty-state-btn.p-button {
+    margin-top: 0.75rem;
+    background: var(--edictum-navy);
+    border-color: var(--edictum-navy);
+    color: #fff;
+    font-size: 1rem;
+    padding: 0.75rem 1.75rem;
+}
+
+.empty-state-btn.p-button:hover {
+    background: var(--edictum-gold);
+    border-color: var(--edictum-gold);
+}
+
+.login-form button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 18px 30px rgba(20, 31, 51, 0.35);
+    filter: brightness(1.03);
+}
+
+.login-back {
+    display: inline-block;
+    margin-top: 1.25rem;
+    color: var(--edictum-navy);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.portal-body .p-button.p-button-outlined {
+    border-color: rgba(27, 42, 68, 0.35);
+    color: var(--edictum-navy);
+}
+
+.portal-body .p-button.p-button-outlined:hover {
+    background: rgba(187, 140, 9, 0.14);
+    border-color: var(--edictum-gold);
+    color: var(--edictum-navy);
+}
+
+.portal-body .topbar-toggle.p-button.p-button-outlined {
+    border-color: var(--edictum-gold-soft);
+    color: var(--edictum-gold-soft);
+}
+
+.portal-body .topbar-toggle.p-button.p-button-outlined:hover {
+    background: rgba(187, 140, 9, 0.2);
+    border-color: var(--edictum-gold);
+    color: #ffffff;
+}
+
+.login-back:hover {
+    text-decoration: underline;
+}
+
+.admin-layout {
+    display: grid;
+    grid-template-columns: 360px 1fr;
+    gap: 1rem;
+    padding: 1rem;
+}
+
+.admin-form-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+}
+
+.full-width {
+    width: 100%;
+}
+
+.admin-actions {
+    margin-top: 1rem;
+    display: flex;
+    gap: 0.5rem;
+}
+
+.actions-column .p-button {
+    margin-right: 0.4rem;
+}
+
+@media (max-width: 980px) {
+    .topbar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+
+    .topbar-actions {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .home-layout,
+    .admin-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .workspace-content {
+        grid-template-columns: 1fr;
+    }
+
+    .login-card {
+        grid-template-columns: 1fr;
+    }
+
+    .login-brand-panel,
+    .login-form-panel {
+        padding: 2rem;
+    }
+}
