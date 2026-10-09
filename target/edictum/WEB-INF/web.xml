@@ -6,7 +6,7 @@
 
     <context-param>
         <param-name>tinymce-api-key</param-name>
-        <param-value>no-api-key</param-value>
+        <param-value>l7h3ukcgm8x006flr21kxz8mxdtw2hb67v4rj2tv1bd2nvpf</param-value>
     </context-param>
 
     <servlet>

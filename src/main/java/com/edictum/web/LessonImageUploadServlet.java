@@ -12,7 +12,7 @@ import jakarta.servlet.http.Part;
 
 import java.io.IOException;
 
-@WebServlet(name = "lessonImageUploadServlet", urlPatterns = "/admin/lesson-images/upload")
+@WebServlet(name = "lessonImageUploadServlet", urlPatterns = "/lesson-images/upload")
 @MultipartConfig
 public class LessonImageUploadServlet extends HttpServlet {
     @Inject
@@ -20,8 +20,13 @@ public class LessonImageUploadServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        if (!request.isUserInRole("admin")) {
-            response.sendError(HttpServletResponse.SC_FORBIDDEN);
+        System.out.println("TinyMCE upload debug: principal=" + request.getUserPrincipal());
+        System.out.println("TinyMCE upload debug: admin=" + request.isUserInRole("admin"));
+        System.out.println("TinyMCE upload debug: teacher=" + request.isUserInRole("teacher"));
+        System.out.println("TinyMCE upload debug: user=" + request.isUserInRole("user"));
+
+        if (request.getUserPrincipal() == null) {
+            writeJsonError(response, HttpServletResponse.SC_FORBIDDEN, "Not authenticated.");
             return;
         }
 
@@ -40,12 +45,14 @@ public class LessonImageUploadServlet extends HttpServlet {
             );
 
             String imageUrl = request.getContextPath() + "/lesson-images/" + imageId;
-            response.setStatus(HttpServletResponse.SC_CREATED);
+            response.setStatus(HttpServletResponse.SC_OK);
             response.setCharacterEncoding("UTF-8");
             response.setContentType("application/json");
             response.getWriter().write("{\"location\":\"" + escapeJson(imageUrl) + "\"}");
         } catch (IllegalArgumentException ex) {
             writeJsonError(response, HttpServletResponse.SC_BAD_REQUEST, ex.getMessage());
+        } catch (RuntimeException ex) {
+            writeJsonError(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Image upload failed.");
         }
     }
 

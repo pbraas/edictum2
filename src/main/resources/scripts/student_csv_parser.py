@@ -1,6 +1,7 @@
 import csv
-from typing import Dict, Iterable, Iterator, List, Optional
-
+import re
+import unicodedata
+from typing import Dict, Iterator, List, Optional, Tuple
 
 PARTICLES = {
     "van", "de", "der", "den", "ter", "ten", "op", "over", "uit", "aan",
@@ -29,6 +30,11 @@ def clean_name(value: Optional[str]) -> str:
     return " ".join(str(value).strip().split())
 
 
+def normalize_email_local_part(value: str) -> str:
+    ascii_value = unicodedata.normalize("NFKD", value).encode("ascii", "ignore").decode("ascii")
+    return re.sub(r"[^a-z0-9]", "", ascii_value.lower())
+
+
 def normalize_family_name(value: Optional[str]) -> str:
     if value is None:
         return ""
@@ -49,6 +55,18 @@ def normalize_family_name(value: Optional[str]) -> str:
     return text
 
 
+def split_full_name(value: str) -> Tuple[str, str]:
+    text = clean_name(value)
+    if not text:
+        return "", ""
+
+    parts = text.split()
+    if len(parts) == 1:
+        return parts[0], ""
+
+    return parts[0], " ".join(parts[1:])
+
+
 def normalize_student_record(raw_row: Dict[str, object]) -> Dict[str, str]:
     row = {
         normalize_key(str(key)): str(value).strip() if value is not None else ""
@@ -56,21 +74,36 @@ def normalize_student_record(raw_row: Dict[str, object]) -> Dict[str, str]:
         if key is not None
     }
 
-    student_number = first_present(row, ["leerlingnummer", "studentnummer", "nummer", "id"])
-    if not student_number:
-        raise ValueError(f"Missing student number in row: {raw_row}")
-
+    full_name = clean_name(first_present(row, ["naamleerling", "volledigenaam", "fullname", "naam"]))
     first_name = clean_name(
-        first_present(row, ["roepnaam", "naam", "voornaam", "firstname", "givenname"])
-    ) or clean_name(first_present(row, ["naam", "voornaam"]))
-    if not first_name:
-        raise ValueError(f"Missing first name in row: {raw_row}")
-
+        first_present(row, ["roepnaam", "voornaam", "firstname", "givenname"])
+    )
     family_name = normalize_family_name(
         first_present(row, ["achternaam", "familienaam", "lastname", "surname", "familyname"])
     )
+
+    if full_name and (not first_name or not family_name):
+        derived_first, derived_family = split_full_name(full_name)
+        if not first_name:
+            first_name = derived_first
+        if not family_name:
+            family_name = derived_family
+
+    if not first_name:
+        raise ValueError(f"Missing first name in row: {raw_row}")
+
     if not family_name:
-        raise ValueError(f"Missing family name in row: {raw_row}")
+        family_name = "van Geenachternaam"
+
+    student_number = first_present(row, ["leerlingnummer", "studentnummer", "nummer", "id"])
+
+    if not student_number:
+        student_number = ".".join(
+            part for part in [
+                normalize_email_local_part(first_name),
+                *[normalize_email_local_part(part) for part in family_name.split() if part]
+            ] if part
+        )
 
     return {
         "studentNumber": student_number,
@@ -89,11 +122,42 @@ def detect_dialect(sample: str) -> csv.Dialect:
 
 
 def read_student_csv(path: str) -> Iterator[Dict[str, str]]:
-    with open(path, "r", encoding="utf-8-sig", newline="") as csv_file:
-        sample = csv_file.read(4096)
-        csv_file.seek(0)
-        dialect = detect_dialect(sample)
-        reader = csv.DictReader(csv_file, dialect=dialect)
+    encodings = ["utf-8-sig", "cp1252", "latin-1"]
+    last_error = None
 
-        for row in reader:
-            yield normalize_student_record(row)
+    for encoding in encodings:
+        try:
+            with open(path, "r", encoding=encoding, newline="") as csv_file:
+                sample = csv_file.read(4096)
+                csv_file.seek(0)
+
+                first_nonempty = ""
+                for line in sample.splitlines():
+                    candidate = line.strip()
+                    if candidate:
+                        first_nonempty = candidate
+                        break
+
+                if first_nonempty and "," not in first_nonempty and ";" not in first_nonempty and "\t" not in first_nonempty:
+                    csv_file.seek(0)
+                    for line in csv_file:
+                        name = line.strip()
+                        if not name:
+                            continue
+                        if name.lower() in {"naam leerling", "naam", "leerlingnummer"}:
+                            continue
+                        yield normalize_student_record({
+                            "naam leerling": name,
+                            "leerlingnummer": ""
+                        })
+                    return
+
+                dialect = detect_dialect(sample)
+                reader = csv.DictReader(csv_file, dialect=dialect)
+                for row in reader:
+                    yield normalize_student_record(row)
+            return
+        except UnicodeDecodeError as exc:
+            last_error = exc
+
+    raise last_error or UnicodeError(f"Could not decode CSV file: {path}")
